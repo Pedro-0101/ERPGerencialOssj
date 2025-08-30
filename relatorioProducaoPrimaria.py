@@ -216,7 +216,7 @@ def graficoProducaoDiaria(ini, fim, df: pd.DataFrame,
   labels = piv.index.strftime("%d/%m (%a)")
 
   try:
-    plt.style.use("seaborn-v0_8-darkgrid")
+    plt.style.use("seaborn-v0_8-deep")
   except Exception:
     pass
 
@@ -301,6 +301,9 @@ def graficoPieCaminhao(df: pd.DataFrame)-> io.BytesIO:
     at.set_fontweight("bold")
     at.set_color("black")
     ax.set_title("Distribuição por veículo", fontsize=22)
+
+  ax.tick_params(axis='x', labelsize=16)
+  ax.tick_params(axis='y', labelsize=16)
   
   buf = io.BytesIO()
   plt.tight_layout()
@@ -351,6 +354,8 @@ def grafico_media_semana(
   ax.set_xlabel("Dia da Semana", fontsize=16)
   ax.set_ylabel("Produção Média (soma diária)", fontsize=16)
   ax.set_xticks(x, dias)
+  ax.tick_params(axis='x', labelsize=16)
+  ax.tick_params(axis='y', labelsize=16)
   ax.grid(True, linestyle="--", alpha=0.6)
 
   # monta texto com os valores
@@ -478,6 +483,8 @@ def grafico_janela_diaria(
   ax.set_title(titulo, fontsize=22)
   ax.set_ylabel("Dia", fontsize=16) 
   ax.tick_params(axis="y", pad=20, right=20)
+  ax.tick_params(axis='x', labelsize=16)
+  ax.tick_params(axis='y', labelsize=16)
   ax.set_xlim(left=7*60, right=19*60)
   ax.invert_yaxis()
 
@@ -583,6 +590,8 @@ def grafico_media_por_hora(
   ax.set_title(titulo, fontsize=22)
   ax.set_xlabel("Hora", fontsize=16)
   ax.set_ylabel("Produção média", fontsize=16)
+  ax.tick_params(axis='x', labelsize=16)
+  ax.tick_params(axis='y', labelsize=16)
   ax.grid(True, axis="y", linestyle="--", alpha=0.5)
 
   plt.tight_layout()
