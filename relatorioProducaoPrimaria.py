@@ -347,9 +347,9 @@ def grafico_media_semana(
 
   fig, ax = plt.subplots(figsize=(9, 7))
   ax.plot(x, y, marker="o", linewidth=2, label="Média")
-  ax.set_title("Produção Média por Dia da Semana")
-  ax.set_xlabel("Dia da Semana")
-  ax.set_ylabel("Produção Média (soma diária)")
+  ax.set_title("Produção Média por Dia da Semana", fontsize=22)
+  ax.set_xlabel("Dia da Semana", fontsize=16)
+  ax.set_ylabel("Produção Média (soma diária)", fontsize=16)
   ax.set_xticks(x, dias)
   ax.grid(True, linestyle="--", alpha=0.6)
 
@@ -364,7 +364,7 @@ def grafico_media_semana(
       0.02, 0.02, legenda_texto,
       transform=ax.transAxes,  # coordenadas relativas (0 a 1)
       ha="left", va="bottom",
-      fontsize=9,
+      fontsize=16,
       bbox=dict(facecolor="white", edgecolor="gray", boxstyle="round,pad=0.4", alpha=0.8)
   )
 
@@ -382,7 +382,7 @@ def grafico_janela_diaria(
   ini=None,                    # filtro inicial opcional
   fim=None,                    # filtro final opcional
   tz="America/Sao_Paulo",      # ex.: "America/Sao_Paulo" (se quiser converter)
-  altura_linha=0.5,            # espessura de cada barra
+  altura_linha=0.6,            # espessura de cada barra
   min_width_min=3,             # largura mínima (em minutos) p/ dias com 1 único registro
   titulo="Janela de Início e Término por Dia",
 ) -> io.BytesIO:
@@ -452,7 +452,7 @@ def grafico_janela_diaria(
   labels    = [labels[i] for i in order]
 
   # --- Plot ---
-  fig, ax = plt.subplots(figsize=(20, max(2.5, 0.45*len(labels))))
+  fig, ax = plt.subplots(figsize=(20, max(2.5, 5+altura_linha*len(labels))))
 
   y_pos = np.arange(len(labels))
   ax.barh(y_pos, width_min, left=start_min, height=altura_linha, align="center")
@@ -484,9 +484,9 @@ def grafico_janela_diaria(
   # Anotações nos extremos (início e fim)
   for yi, (s, e) in enumerate(zip(start_min, end_min)):
       ax.annotate(_fmt_hhmm(s, None), (s, yi), xytext=(4, 0), textcoords="offset points",
-                  ha="left", va="center", fontsize=12)
+                  ha="left", va="center", fontsize=16)
       ax.annotate(_fmt_hhmm(e, None), (e, yi), xytext=(4, 0), textcoords="offset points",
-                  ha="left", va="center", fontsize=12)
+                  ha="left", va="center", fontsize=16)
       
   plt.tight_layout()
 
@@ -526,7 +526,7 @@ def grafico_media_por_hora(
       fim = pd.to_datetime(fim); df_tmp = df_tmp[df_tmp[coluna_data] <= fim]
 
   if df_tmp.empty:
-      fig, ax = plt.subplots(figsize=(20, 6))
+      fig, ax = plt.subplots(figsize=(20, 8))
       ax.text(0.5, 0.5, "Sem dados no período selecionado", ha="center", va="center")
       ax.axis("off")
       buf = io.BytesIO(); fig.savefig(buf, format="png"); plt.close(fig); buf.seek(0)
@@ -574,8 +574,8 @@ def grafico_media_por_hora(
           ax.annotate(
               fmt_valor(v),
               xy=(h + 0.5, v),
-              xytext=(0, 3), textcoords="offset points",
-              ha="center", va="bottom", fontsize=9
+              xytext=(0, -1), textcoords="offset points",
+              ha="center", va="bottom", fontsize=16
           )
 
   ax.set_xticks(horas, labels)
@@ -592,7 +592,6 @@ def grafico_media_por_hora(
   buf.seek(0)
   return buf
 
-# ================= Build Relatório =================
 # ================= Build Relatório =================
 def build_relatorio(df: pd.DataFrame,
                     dataInicio: datetime,
@@ -666,11 +665,11 @@ def build_relatorio(df: pd.DataFrame,
   story = []
   story.append(NextPageTemplate("NORMAL"))
   story.append(PageBreak())
-  story.append(Paragraph("Produção diária", styles["Heading2"]))
+  story.append(Paragraph("Indicadores de produção primária", styles["Heading1"]))
   story.append(Image(imageGraficoProducaoDiaria, width=20*cm, height=12*cm))
   story.append(tabela)
   story.append(Image(imageGraficoMediaProducaoPorHora, width=20*cm, height=6*cm))
-  story.append(Image(imageGraficoTempoTrabalhado, width=20*cm, height=12*cm))
+  story.append(Image(imageGraficoTempoTrabalhado, width=20*cm, height=20*cm))
   story.append(NextPageTemplate("NORMAL"))
   story.append(PageBreak())
   story.append(Paragraph("Resumo", styles["Heading2"]))
@@ -737,7 +736,8 @@ def main():
     empresa=stringNomeObra,
     gerado_por="Sistema OSSJ",
     caminho_logo="./assets/logos/logo_sao_joao_1024x400.jpeg",
-    mostrar_marcadagua=True
+    mostrar_marcadagua=True,
+    gerar_pdf=True
   )
 
 if __name__ == "__main__":
