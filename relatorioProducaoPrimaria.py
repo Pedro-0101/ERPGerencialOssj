@@ -416,6 +416,8 @@ def grafico_janela_diaria(
   if fim is not None:
       fim = pd.to_datetime(fim)
       df_tmp = df_tmp[df_tmp[coluna_data] <= fim]
+      
+  plt.style.use("seaborn-v0_8-pastel")
 
   if df_tmp.empty:
       # Gera uma imagem vazia explicativa
@@ -601,6 +603,65 @@ def grafico_media_por_hora(
   buf.seek(0)
   return buf
 
+# ================= Campos total e  media diaria =================
+
+def grafico_total_e_media(
+    df: pd.DataFrame,
+    coluna_data="time",
+    coluna_valor="volume_descarregado",
+    ini=None,
+    fim=None,
+    titulo="Resumo de Produção"
+) -> io.BytesIO:
+    """
+    Gera um 'gráfico' simples com total e média de produção por dia.
+    Retorna um buffer PNG (io.BytesIO).
+    """
+
+    # --- tratamento ---
+    df_tmp = df.copy()
+    df_tmp[coluna_data] = pd.to_datetime(df_tmp[coluna_data], errors="coerce")
+    df_tmp[coluna_valor] = pd.to_numeric(df_tmp[coluna_valor], errors="coerce")
+    df_tmp = df_tmp.dropna(subset=[coluna_data, coluna_valor])
+
+    # filtro de período
+    if ini is not None:
+        ini = pd.to_datetime(ini); df_tmp = df_tmp[df_tmp[coluna_data] >= ini]
+    if fim is not None:
+        fim = pd.to_datetime(fim); df_tmp = df_tmp[df_tmp[coluna_data] <= fim]
+
+    if df_tmp.empty:
+        fig, ax = plt.subplots(figsize=(20, 6))
+        ax.text(0.5, 0.5, "Sem dados no período", ha="center", va="center")
+        ax.axis("off")
+        buf = io.BytesIO(); fig.savefig(buf, format="png"); plt.close(fig); buf.seek(0)
+        return buf
+
+    # --- cálculos ---
+    total = df_tmp[coluna_valor].sum()
+    diarios = df_tmp.groupby(df_tmp[coluna_data].dt.date)[coluna_valor].sum()
+    media_dia = diarios.mean()
+
+    # --- layout ---
+    fig, ax = plt.subplots(figsize=(8, 3))
+    ax.axis("off")
+    ax.set_title(titulo, fontsize=18, weight="bold")
+
+    ax.text(0.05, 0.6, "Total no período:", fontsize=14, ha="left", weight="bold")
+    ax.text(0.95, 0.6, f"{total:,.0f} t", fontsize=14, ha="right")
+
+    ax.text(0.05, 0.3, "Média por dia:", fontsize=14, ha="left", weight="bold")
+    ax.text(0.95, 0.3, f"{media_dia:,.1f} t/dia", fontsize=14, ha="right")
+
+    plt.tight_layout()
+
+    # --- exporta ---
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+
 # ================= Build Relatório =================
 def build_relatorio(df: pd.DataFrame,
                     dataInicio: datetime,
@@ -621,6 +682,7 @@ def build_relatorio(df: pd.DataFrame,
   imageGraficoMediaDiaSemana        = grafico_media_semana(df)
   imageGraficoTempoTrabalhado       = grafico_janela_diaria(df)
   imageGraficoMediaProducaoPorHora  = grafico_media_por_hora(df)
+  imageTotalMedia                   = grafico_total_e_media(df)
 
   # se não for gerar PDF, retorna só os gráficos
   if not gerar_pdf:
@@ -675,6 +737,7 @@ def build_relatorio(df: pd.DataFrame,
   story.append(NextPageTemplate("NORMAL"))
   story.append(PageBreak())
   story.append(Paragraph("Indicadores de produção primária", styles["Heading1"]))
+  story.append(Image(imageTotalMedia,width=20*cm, height=6*cm))
   story.append(Image(imageGraficoProducaoDiaria, width=20*cm, height=12*cm))
   story.append(tabela)
   story.append(Image(imageGraficoMediaProducaoPorHora, width=20*cm, height=6*cm))
